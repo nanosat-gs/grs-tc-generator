@@ -20,6 +20,10 @@ This module is part of the **Control Server** in the Ground Station software sta
 - **Database Factory**: Modular support for PostgreSQL (Production/Docker) and SQLite (Local testing).
 - **Modern UI**: Responsive "Mission Control" Dashboard built with Bootstrap 5.
 - **Dockerized**: Fully automated setup with Docker Compose.
+- **Satellite Registry** (`/satellites`): orbital data per satellite (NORAD ID or a manual TLE), with a CelesTrak lookup so the operator confirms the official object name before saving a NORAD ID, plus each satellite's current position and next pass.
+- **Pass Planning Tables**: `scheduled_passes` and `satellite_tracking_status`, written by the ground station's TC Scheduler and shown here and on the dashboard.
+
+> **In the nanosat-gs ground station** ([nanosat-gs/grs-station](https://github.com/nanosat-gs/grs-station)) this fork owns the database schema (`resources/database/schema.sql`). The TC Scheduler is the only service that writes the plan; the contract between the two is in `docs/schema-contract.md` of [grs-tc-scheduler](https://github.com/nanosat-gs/grs-tc-scheduler). Reception settings (downlinks, operator decisions about passes) live in the TC Scheduler's own `mission_control` schema and are edited in the GRS Manager panel, not here.
 ---
 ### Interface
 
@@ -33,7 +37,9 @@ This module is part of the **Control Server** in the Ground Station software sta
 │   ├── database             # DB Adapters & Factory
 │   ├── models               # SQLAlchemy Models
 │   ├── routes               # Web Controllers
-│   └── templates            # HTML Views (Jinja2)
+│   ├── services             # External services (CelesTrak lookup)
+│   ├── static               # CSS
+│   └── templates            # HTML Views (Jinja2): dashboard, satellites
 ├── tests                    # Test Suite
 ├── resources
 │   └── database             # SQL Scripts (Schema)
@@ -61,7 +67,25 @@ classDiagram
         +str name
         +str code
         +str status
+        +int norad_id
+        +str tle_line1
+        +str tle_line2
         +datetime updated_at
+    }
+
+    class ScheduledPass {
+        +int id
+        +datetime aos_time
+        +datetime los_time
+        +float max_elevation_deg
+        +str status
+    }
+
+    class SatelliteTrackingStatus {
+        +float azimuth_deg
+        +float elevation_deg
+        +bool is_visible
+        +datetime checked_at
     }
 
     class Telecommand {
@@ -86,6 +110,8 @@ classDiagram
     Operator "1" -- "*" ExecutionLog : generates
     Satellite "1" -- "*" Telecommand : receives
     Telecommand "1" -- "*" ExecutionLog : has
+    Satellite "1" -- "*" ScheduledPass : planned for
+    Satellite "1" -- "0..1" SatelliteTrackingStatus : current position
 
     note for Operator "Handles authentication and\nuser management"
     note for Satellite "Represents space assets\nwith tracking info"
@@ -219,6 +245,10 @@ Este módulo é parte do **Control Server** na estrutura de software da Estaçã
 - **Modelagem Robusta**: ORM SQLAlchemy 2.0 com restrições e relacionamentos completos.
 - **Interface Moderna**: Dashboard estilo "Mission Control" responsivo.
 - **Dockerizado**: Configuração automatizada com Docker Compose.
+- **Cadastro de satélites** (`/satellites`): dados orbitais por satélite (NORAD ID ou TLE manual), com busca no CelesTrak para o operador conferir o nome oficial do objeto antes de salvar um NORAD ID, além da posição atual e da próxima passagem de cada satélite.
+- **Tabelas de planejamento de passagens**: `scheduled_passes` e `satellite_tracking_status`, escritas pelo TC Scheduler da estação e mostradas aqui e no dashboard.
+
+> **Na estação nanosat-gs** ([nanosat-gs/grs-station](https://github.com/nanosat-gs/grs-station)) este fork é o dono do schema do banco (`resources/database/schema.sql`). O TC Scheduler é o único serviço que escreve o plano; o contrato entre os dois está em `docs/schema-contract.md` do [grs-tc-scheduler](https://github.com/nanosat-gs/grs-tc-scheduler). As configurações de recepção (downlinks, decisões do operador sobre passagens) ficam no schema `mission_control` do próprio TC Scheduler e são editadas no painel do GRS Manager, não aqui.
 
 ### 🛠️ Como Executar (Rápido com Docker)
 
