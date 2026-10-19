@@ -30,5 +30,9 @@ class DatabaseConfig:
                 sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
             )
             Base.metadata.create_all(bind=self.engine)
+            # create_all never alters an existing table: the status CHECK
+            # grew with the uplink slice and is replaced here when needed.
+            from app.database.migrations import ensure_status_constraint
+            ensure_status_constraint(self.engine)
 
         return self.session_factory()

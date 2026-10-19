@@ -99,7 +99,9 @@ CREATE TABLE telecommands (
     operator_id INTEGER NOT NULL DEFAULT 1 REFERENCES operators(id) ON DELETE SET DEFAULT,
     command_type VARCHAR(50) NOT NULL,
     parameters JSONB,
-    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'queued', 'sent', 'confirmed', 'failed')),
+    -- response_received / no_response: the uplink slice (uplink-pares-e-estados-fs2.md §3).
+    -- An existing database gets them from app/database/migrations.py at boot.
+    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'queued', 'sent', 'response_received', 'confirmed', 'failed', 'no_response')),
     status_message TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     sent_at TIMESTAMP WITH TIME ZONE,

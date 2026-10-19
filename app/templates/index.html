@@ -111,7 +111,7 @@
                             <td><span style="color: #fff; font-weight: 600;">{{ tc.command_type }}</span></td>
                             <td>{{ tc.satellite.code }}</td>
                             <td>
-                                <span class="badge {{ 'warning' if tc.status == 'pending' else 'success' }}">
+                                <span class="badge {{ {'pending': 'warning', 'queued': 'warning', 'response_received': 'warning', 'failed': 'danger', 'no_response': 'danger'}.get(tc.status, 'success') }}">
                                     {{ tc.status }}
                                 </span>
                             </td>
@@ -150,7 +150,7 @@
                             <td>{{ tc.command_type }}</td>
                             <td>{{ tc.satellite.code }}</td>
                             <td>{{ tc.operator.username }}</td>
-                            <td><span class="badge">{{ tc.status }}</span></td>
+                            <td><span class="badge {{ {'confirmed': 'success', 'failed': 'danger', 'no_response': 'danger'}.get(tc.status, '') }}">{{ tc.status }}</span></td>
                             <td>{{ tc.priority }}</td>
                             <td>{{ tc.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
                         </tr>
@@ -192,7 +192,12 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Command Type</label>
-                        <input type="text" name="command_type" class="form-control" placeholder="e.g. ORBIT_ADJUST" required>
+                        <input type="text" name="command_type" class="form-control" placeholder="e.g. PING" list="uplinkCommands" required>
+                        <datalist id="uplinkCommands">
+                            {% for name, help in uplink_commands.items() %}
+                            <option value="{{ name }}">{{ help }}</option>
+                            {% endfor %}
+                        </datalist>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Priority (1-10)</label>
@@ -231,11 +236,9 @@
                     <div>
                         <label class="form-label">Status</label>
                         <select id="detailStatus" class="form-control">
-                            <option value="pending">Pending</option>
-                            <option value="queued">Queued</option>
-                            <option value="sent">Sent</option>
-                            <option value="confirmed">Confirmed</option>
-                            <option value="failed">Failed</option>
+                            {% for status in statuses %}
+                            <option value="{{ status }}">{{ status.replace('_', ' ')|capitalize }}</option>
+                            {% endfor %}
                         </select>
                     </div>
                     <div>

@@ -86,7 +86,8 @@ class Telecommand(Base):
     # Table constraints
     __table_args__ = (
         CheckConstraint(
-            "status IN ('pending', 'queued', 'sent', 'confirmed', 'failed')",
+            "status IN ('pending', 'queued', 'sent', 'response_received', 'confirmed', "
+            "'failed', 'no_response')",
             name='valid_status'
         ),
         CheckConstraint(
@@ -99,7 +100,8 @@ class Telecommand(Base):
         """Update the status of the telecommand and set relevant timestamps.
 
         Args:
-            new_status: The new status (pending, queued, sent, confirmed, failed)
+            new_status: The new status (pending, queued, sent, response_received,
+                confirmed, failed, no_response)
             message: Optional status message
 
         Returns:

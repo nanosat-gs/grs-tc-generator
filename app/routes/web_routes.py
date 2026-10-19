@@ -9,7 +9,7 @@ from app.models.telecommand import Telecommand
 from app.models.satellite import Satellite
 from app.models.scheduled_pass import ScheduledPass
 from app.models.operator import Operator
-from app.services import celestrak
+from app.services import celestrak, uplink_catalog
 
 web_bp = Blueprint('web', __name__)
 
@@ -19,11 +19,12 @@ def index():
     session = DatabaseManager.get_session()
     try:
         pending_filter = Telecommand.status.in_(['pending', 'queued'])
-        sent_filter = Telecommand.status == 'sent'
+        # "In flight": on the air, or answered but not decoded yet.
+        sent_filter = Telecommand.status.in_(uplink_catalog.IN_FLIGHT)
         # The card says "24h", so the query has to mean it.
         last_24h = datetime.now(timezone.utc) - timedelta(hours=24)
         history_filter = and_(
-            Telecommand.status.in_(['confirmed', 'failed']),
+            Telecommand.status.in_(uplink_catalog.FINISHED),
             Telecommand.created_at >= last_24h,
         )
 
@@ -59,6 +60,8 @@ def index():
 
         return render_template(
             'index.html',
+            uplink_commands=uplink_catalog.UPLINK_COMMANDS,
+            statuses=uplink_catalog.STATUSES,
             counts=counts,
             pending_tcs=pending_tcs,
             sent_tcs=sent_tcs,
@@ -87,10 +90,19 @@ def create_telecommand():
                 flash('Invalid JSON in parameters field', 'warning')
                 return redirect(url_for('web.index'))
 
+        command_type = uplink_catalog.normalize_command_type(data['command_type'])
+        try:
+            warning = uplink_catalog.validate(command_type, params)
+        except uplink_catalog.InvalidTelecommand as error:
+            flash(f'Invalid telecommand: {error}', 'danger')
+            return redirect(url_for('web.index'))
+        if warning:
+            flash(warning, 'warning')
+
         new_tc = Telecommand(
             satellite_id=int(data['satellite_id']),
             operator_id=int(data['operator_id']),
-            command_type=data['command_type'],
+            command_type=command_type,
             priority=int(data['priority']),
             status='pending',
             parameters=params
