@@ -1,15 +1,19 @@
+import os
+
 from flask import Flask
 from app.database.factories.database_manager import DatabaseManager
 from app.routes.web_routes import web_bp
+
+DEV_SECRET_KEY = 'dev-secret-key-change-in-production'
 
 def create_app():
     """Application Factory Pattern to create and configure the Flask app."""
     app = Flask(__name__)
 
     # Configuration
-    # In a real app, use environment variables for secrets!
-    app.config['SECRET_KEY'] = 'dev-secret-key-change-in-production'
-    
+    # The secret comes from the environment; the fallback is for development only.
+    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY') or DEV_SECRET_KEY
+
     # Initialize Database
     # Force PostgreSQL usage as requested
     DatabaseManager.init_db(db_type='postgresql')

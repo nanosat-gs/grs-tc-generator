@@ -24,6 +24,8 @@ This module is part of the **Control Server** in the Ground Station software sta
 - **Pass Planning Tables**: `scheduled_passes` and `satellite_tracking_status`, written by the ground station's TC Scheduler and shown here and on the dashboard.
 
 > **In the nanosat-gs ground station** ([nanosat-gs/grs-station](https://github.com/nanosat-gs/grs-station)) this fork owns the database schema (`resources/database/schema.sql`). The TC Scheduler is the only service that writes the plan; the contract between the two is in `docs/schema-contract.md` of [grs-tc-scheduler](https://github.com/nanosat-gs/grs-tc-scheduler). Reception settings (downlinks, operator decisions about passes) live in the TC Scheduler's own `mission_control` schema and are edited in the GRS Manager panel, not here.
+
+> **No authentication yet.** The `Operator` model stores a password hash, but no route requires a login: anyone who can reach port 5000 can create, edit and delete satellites and telecommands. Keep it on a trusted network. `SECRET_KEY` is read from the environment; the built-in value is for development only.
 ---
 ### Interface
 
@@ -249,6 +251,8 @@ Este módulo é parte do **Control Server** na estrutura de software da Estaçã
 - **Tabelas de planejamento de passagens**: `scheduled_passes` e `satellite_tracking_status`, escritas pelo TC Scheduler da estação e mostradas aqui e no dashboard.
 
 > **Na estação nanosat-gs** ([nanosat-gs/grs-station](https://github.com/nanosat-gs/grs-station)) este fork é o dono do schema do banco (`resources/database/schema.sql`). O TC Scheduler é o único serviço que escreve o plano; o contrato entre os dois está em `docs/schema-contract.md` do [grs-tc-scheduler](https://github.com/nanosat-gs/grs-tc-scheduler). As configurações de recepção (downlinks, decisões do operador sobre passagens) ficam no schema `mission_control` do próprio TC Scheduler e são editadas no painel do GRS Manager, não aqui.
+
+> **Ainda sem autenticação.** O modelo `Operator` guarda um hash de senha, mas nenhuma rota exige login: quem alcança a porta 5000 cria, edita e apaga satélites e telecomandos. Mantenha em rede confiável. A `SECRET_KEY` é lida do ambiente; o valor embutido serve só para desenvolvimento.
 
 ### 🛠️ Como Executar (Rápido com Docker)
 
